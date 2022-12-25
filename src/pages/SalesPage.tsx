@@ -52,7 +52,9 @@ const SalesPage: FunctionComponent<Props> = (props) => {
 
   const addSaleMutation = useMutation({
     mutationFn: (data: CreateSaleDto) => postFn("/sales", data),
-    onSuccess: () => {},
+    onSuccess: () => {
+      setSelectedSection("Table");
+    },
     onError: (err) => {
       throw err;
     },

@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react";
+import React, { FunctionComponent, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -23,7 +23,12 @@ export const destinations = [
 const Root: FunctionComponent<Props> = (props) => {
   const navigate = useNavigate();
   const theme = useTheme();
-
+  useEffect(() => {
+    const loginStatus = sessionStorage.getItem("loginStatus");
+    if (loginStatus !== "true") {
+      navigate("/login");
+    }
+  }, []);
   const DeskDrawer = (
     <Drawer
       variant={"permanent"}

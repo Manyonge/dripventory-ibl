@@ -54,7 +54,9 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
 
   const addProductMutation = useMutation({
     mutationFn: (data: CreateProductDto) => postFn("/products", data),
-    onSuccess: () => {},
+    onSuccess: () => {
+      setSelectedSection("Table");
+    },
     onError: (err) => {
       throw err;
     },

@@ -50,7 +50,7 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
 
   const addCustomerMutation = useMutation({
     mutationFn: (data: CreateCustomerDto) => postFn("/customers", data),
-    onSuccess: () => {},
+    onSuccess: () => {setSelectedSection('Table')},
     onError: (err) => {
       throw err;
     },

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
 import {
@@ -8,7 +8,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider, useNavigate } from "react-router-dom";
 import { router } from "./routes/AppRoutes";
 import axios from "axios";
 
