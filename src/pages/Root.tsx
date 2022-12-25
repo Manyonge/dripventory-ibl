@@ -51,6 +51,7 @@ const Root: FunctionComponent<Props> = (props) => {
       </Toolbar>
       {destinations.map((destination) => (
         <MenuItem
+          key={destination.label}
           onClick={() => {
             navigate(destination.route);
           }}

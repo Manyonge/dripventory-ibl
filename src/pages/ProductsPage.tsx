@@ -1,8 +1,35 @@
 import React, { FunctionComponent, useState } from "react";
 import { ColumnBox, ErrorTypography, RowBox } from "../components";
-import { Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+  Box,
+} from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { useMutation, useQuery } from "react-query";
+import postFn from "../libs/axios/postFn";
+import getFn from "../libs/axios/getFn";
+import { Product } from "../types";
+import {
+  DEFAULT_OPTIONS,
+  getTheme,
+} from "@table-library/react-table-library/material-ui";
+import { useTheme } from "@table-library/react-table-library/theme";
+import {
+  Body,
+  Cell,
+  Data,
+  Header,
+  HeaderCell,
+  HeaderRow,
+  Row,
+  Table,
+} from "@table-library/react-table-library";
 
 interface OwnProps {}
 
@@ -22,11 +49,19 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
   } = useForm<CreateProductDto>();
 
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
-    "Form"
+    "Table"
   );
 
+  const addProductMutation = useMutation({
+    mutationFn: (data: CreateProductDto) => postFn("/products", data),
+    onSuccess: () => {},
+    onError: (err) => {
+      throw err;
+    },
+  });
+
   const onSubmit: SubmitHandler<CreateProductDto> = (data) => {
-    console.log(data);
+    addProductMutation.mutate(data);
   };
 
   const WelcomeTypography = (
@@ -38,24 +73,97 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
         </Typography>
       </RowBox>
       <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
-        {selectedSection === "Form" && (
-          <Typography variant={"h6"} fontWeight={"bold"}>
-            {" "}
-            Create a new product record{" "}
-          </Typography>
-        )}
+        <Typography variant={"h6"} fontWeight={"bold"}>
+          {" "}
+          {selectedSection === "Form" && "Create a new product record"}
+          {selectedSection === "Table" && "View all product records"}
+        </Typography>
       </RowBox>
     </>
   );
   const sectionSwitcher = (
     <RowBox sx={{ width: "100%", justifyContent: "flex-end", px: "10%" }}>
       {selectedSection === "Form" && (
-        <Button sx={{ borderRadius: "3rem" }} variant={"outlined"}>
+        <Button
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Table");
+          }}
+        >
           {" "}
           View Products{" "}
         </Button>
       )}
+      {selectedSection === "Table" && (
+        <Button
+          startIcon={<AddRoundedIcon />}
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Form");
+          }}
+        >
+          {" "}
+          Add Product{" "}
+        </Button>
+      )}
     </RowBox>
+  );
+
+  const [products, setProducts] = useState<Product[]>();
+
+  const productsQuery = useQuery({
+    queryKey: " Data",
+    queryFn: () => getFn("/products"),
+    onSuccess: (data: Product[]) => {
+      console.log(data);
+      setProducts(data);
+    },
+  });
+
+  const materialTheme = getTheme(DEFAULT_OPTIONS);
+  const THEME = useTheme(materialTheme);
+  const tableData: Data = { nodes: products ?? [{ id: "dffe" }] };
+
+  const ProductTable = (
+    <>
+      {productsQuery.isLoading ? <CircularProgress /> : null}
+      {productsQuery.isError ? (
+        <Typography variant={"h6"} color={"error"}>
+          {" "}
+          Could not load data
+        </Typography>
+      ) : null}
+      {productsQuery.isSuccess ? (
+        <Table data={tableData} theme={THEME}>
+          {(tableList) => (
+            <>
+              <Header>
+                <HeaderRow>
+                  <HeaderCell> Product Name </HeaderCell>
+                  <HeaderCell> QTY </HeaderCell>
+                  <HeaderCell> Buying Price </HeaderCell>
+                  <HeaderCell> Selling Date </HeaderCell>
+                  <HeaderCell> Restock Date</HeaderCell>
+                </HeaderRow>
+              </Header>
+              <Body>
+                {tableList.map((item) => (
+                  <Row key={item._id} item={item}>
+                    <Cell> {item.name} </Cell>
+                    <Cell> {item.quantity} </Cell>
+                    <Cell> {item.buyingPrice} </Cell>
+                    <Cell> {item.sellingPrice} </Cell>
+                    <Cell> {item.restockDate} </Cell>
+                  </Row>
+                ))}
+              </Body>
+            </>
+          )}
+        </Table>
+      ) : null}
+    </>
   );
 
   const PostForm = (
@@ -149,11 +257,17 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
     </form>
   );
   return (
-    <ColumnBox sx={{ width: "100%", height: "100%", p: "5%" }}>
+    <Box sx={{ width: "100%", height: "100%", p: "5%" }}>
       {WelcomeTypography}
       {sectionSwitcher}
-      {PostForm}
-    </ColumnBox>
+      {selectedSection === "Table" && (
+        <Paper elevation={4} sx={{ borderRadius: "1em" }}>
+          {" "}
+          {ProductTable}{" "}
+        </Paper>
+      )}
+      {selectedSection === "Form" && PostForm}
+    </Box>
   );
 };
 

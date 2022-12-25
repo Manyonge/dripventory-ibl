@@ -1,8 +1,34 @@
 import React, { FunctionComponent, useState } from "react";
 import { ColumnBox, ErrorTypography, RowBox } from "../components";
-import { Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { useMutation, useQuery } from "react-query";
+import postFn from "../libs/axios/postFn";
+import { Customer } from "../types";
+import getFn from "../libs/axios/getFn";
+import {
+  DEFAULT_OPTIONS,
+  getTheme,
+} from "@table-library/react-table-library/material-ui";
+import { useTheme } from "@table-library/react-table-library/theme";
+import {
+  Body,
+  Cell,
+  Data,
+  Header,
+  HeaderCell,
+  HeaderRow,
+  Row,
+  Table,
+} from "@table-library/react-table-library";
 
 interface OwnProps {}
 
@@ -11,7 +37,7 @@ interface CreateCustomerDto {
   name: string;
   contact: string;
 }
-const ProductsPage: FunctionComponent<Props> = (props) => {
+const CustomersPage: FunctionComponent<Props> = (props) => {
   const {
     register,
     formState: { errors },
@@ -19,11 +45,18 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
   } = useForm<CreateCustomerDto>();
 
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
-    "Form"
+    "Table"
   );
 
+  const addCustomerMutation = useMutation({
+    mutationFn: (data: CreateCustomerDto) => postFn("/customers", data),
+    onSuccess: () => {},
+    onError: (err) => {
+      throw err;
+    },
+  });
   const onSubmit: SubmitHandler<CreateCustomerDto> = (data) => {
-    console.log(data);
+    addCustomerMutation.mutate(data);
   };
 
   const WelcomeTypography = (
@@ -35,24 +68,88 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
         </Typography>
       </RowBox>
       <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
-        {selectedSection === "Form" && (
-          <Typography variant={"h6"} fontWeight={"bold"}>
-            {" "}
-            Create a new customer record{" "}
-          </Typography>
-        )}
+        {selectedSection === "Form" && "Create a new customer record"}
+        {selectedSection === "Table" && "View all customer records"}
       </RowBox>
     </>
   );
   const sectionSwitcher = (
     <RowBox sx={{ width: "100%", justifyContent: "flex-end", px: "10%" }}>
       {selectedSection === "Form" && (
-        <Button sx={{ borderRadius: "3rem" }} variant={"outlined"}>
+        <Button
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Table");
+          }}
+        >
           {" "}
           View Customers{" "}
         </Button>
       )}
+      {selectedSection === "Table" && (
+        <Button
+          startIcon={<AddRoundedIcon />}
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Form");
+          }}
+        >
+          {" "}
+          Add Customer{" "}
+        </Button>
+      )}
     </RowBox>
+  );
+
+  const [customers, setCustomers] = useState<Customer[]>();
+
+  const customersQuery = useQuery({
+    queryKey: " Data",
+    queryFn: () => getFn("/customers"),
+    onSuccess: (data: Customer[]) => {
+      console.log(data);
+      setCustomers(data);
+    },
+  });
+
+  const materialTheme = getTheme(DEFAULT_OPTIONS);
+  const THEME = useTheme(materialTheme);
+  const tableData: Data = { nodes: customers ?? [{ id: "dffe" }] };
+
+  const CustomerTable = (
+    <>
+      {customersQuery.isLoading ? <CircularProgress /> : null}
+      {customersQuery.isError ? (
+        <Typography variant={"h6"} color={"error"}>
+          {" "}
+          Could not load data
+        </Typography>
+      ) : null}
+      {customersQuery.isSuccess ? (
+        <Table data={tableData} theme={THEME}>
+          {(tableList) => (
+            <>
+              <Header>
+                <HeaderRow>
+                  <HeaderCell> Customer Name </HeaderCell>
+                  <HeaderCell> Contact </HeaderCell>
+                </HeaderRow>
+              </Header>
+              <Body>
+                {tableList.map((item) => (
+                  <Row key={item._id} item={item}>
+                    <Cell> {item.name} </Cell>
+                    <Cell> {item.contact} </Cell>
+                  </Row>
+                ))}
+              </Body>
+            </>
+          )}
+        </Table>
+      ) : null}
+    </>
   );
 
   const PostForm = (
@@ -99,9 +196,15 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
     <ColumnBox sx={{ width: "100%", height: "100%", p: "5%" }}>
       {WelcomeTypography}
       {sectionSwitcher}
-      {PostForm}
+      {selectedSection === "Table" && (
+        <Paper elevation={4} sx={{ borderRadius: "1em" }}>
+          {" "}
+          {CustomerTable}{" "}
+        </Paper>
+      )}
+      {selectedSection === "Form" && PostForm}
     </ColumnBox>
   );
 };
 
-export default ProductsPage;
+export default CustomersPage;

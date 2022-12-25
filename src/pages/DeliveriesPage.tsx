@@ -1,8 +1,34 @@
 import React, { FunctionComponent, useState } from "react";
 import { ColumnBox, ErrorTypography, RowBox } from "../components";
-import { Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { useMutation, useQuery } from "react-query";
+import postFn from "../libs/axios/postFn";
+import { Delivery, Product } from "../types";
+import getFn from "../libs/axios/getFn";
+import {
+  DEFAULT_OPTIONS,
+  getTheme,
+} from "@table-library/react-table-library/material-ui";
+import { useTheme } from "@table-library/react-table-library/theme";
+import {
+  Body,
+  Cell,
+  Data,
+  Header,
+  HeaderCell,
+  HeaderRow,
+  Row,
+  Table,
+} from "@table-library/react-table-library";
 
 interface OwnProps {}
 
@@ -22,11 +48,20 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
   } = useForm<CreateDeliveryDto>();
 
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
-    "Form"
+    "Table"
   );
 
+  const addDeliveryMutation = useMutation({
+    mutationFn: (data: CreateDeliveryDto) => postFn("/deliveries", data),
+    onSuccess: () => {
+      setSelectedSection("Table");
+    },
+    onError: (err) => {
+      throw err;
+    },
+  });
   const onSubmit: SubmitHandler<CreateDeliveryDto> = (data) => {
-    console.log(data);
+    addDeliveryMutation.mutate(data);
   };
 
   const WelcomeTypography = (
@@ -38,24 +73,94 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
         </Typography>
       </RowBox>
       <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
-        {selectedSection === "Form" && (
-          <Typography variant={"h6"} fontWeight={"bold"}>
-            {" "}
-            Create a new delivery record{" "}
-          </Typography>
-        )}
+        {selectedSection === "Form" && "Create a new delivery record"}
+        {selectedSection === "Table" && "View all delivery records"}
       </RowBox>
     </>
   );
   const sectionSwitcher = (
     <RowBox sx={{ width: "100%", justifyContent: "flex-end", px: "10%" }}>
       {selectedSection === "Form" && (
-        <Button sx={{ borderRadius: "3rem" }} variant={"outlined"}>
+        <Button
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Table");
+          }}
+        >
           {" "}
           View Deliveries{" "}
         </Button>
       )}
+      {selectedSection === "Table" && (
+        <Button
+          startIcon={<AddRoundedIcon />}
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Form");
+          }}
+        >
+          {" "}
+          Add Delivery{" "}
+        </Button>
+      )}
     </RowBox>
+  );
+
+  const [deliveries, setDeliveries] = useState<Delivery[]>();
+
+  const deliveriesQuery = useQuery({
+    queryKey: " Data",
+    queryFn: () => getFn("/deliveries"),
+    onSuccess: (data: Delivery[]) => {
+      console.log(data);
+      setDeliveries(data);
+    },
+  });
+
+  const materialTheme = getTheme(DEFAULT_OPTIONS);
+  const THEME = useTheme(materialTheme);
+  const tableData: Data = { nodes: deliveries ?? [{ id: "dffe" }] };
+
+  const DeliveryTable = (
+    <>
+      {deliveriesQuery.isLoading ? <CircularProgress /> : null}
+      {deliveriesQuery.isError ? (
+        <Typography variant={"h6"} color={"error"}>
+          {" "}
+          Could not load data
+        </Typography>
+      ) : null}
+      {deliveriesQuery.isSuccess ? (
+        <Table data={tableData} theme={THEME}>
+          {(tableList) => (
+            <>
+              <Header>
+                <HeaderRow>
+                  <HeaderCell> Product Name </HeaderCell>
+                  <HeaderCell> Quantity </HeaderCell>
+                  <HeaderCell> Date of Sale </HeaderCell>
+                  <HeaderCell> Selling Price </HeaderCell>
+                  <HeaderCell> Customer Contact </HeaderCell>
+                </HeaderRow>
+              </Header>
+              <Body>
+                {tableList.map((item) => (
+                  <Row key={item._id} item={item}>
+                    <Cell> {item.productName} </Cell>
+                    <Cell> {item.quantity} </Cell>
+                    <Cell> {item.saleDate} </Cell>
+                    <Cell> {item.sellingPrice} </Cell>
+                    <Cell> {item.customerContact} </Cell>
+                  </Row>
+                ))}
+              </Body>
+            </>
+          )}
+        </Table>
+      ) : null}
+    </>
   );
 
   const PostForm = (
@@ -155,7 +260,13 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
     <ColumnBox sx={{ width: "100%", height: "100%", p: "5%" }}>
       {WelcomeTypography}
       {sectionSwitcher}
-      {PostForm}
+      {selectedSection === "Table" && (
+        <Paper elevation={4} sx={{ borderRadius: "1em" }}>
+          {" "}
+          {DeliveryTable}{" "}
+        </Paper>
+      )}
+      {selectedSection === "Form" && PostForm}
     </ColumnBox>
   );
 };

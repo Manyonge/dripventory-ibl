@@ -1,8 +1,34 @@
 import React, { FunctionComponent, useState } from "react";
 import { ColumnBox, ErrorTypography, RowBox } from "../components";
-import { Button, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { useMutation, useQuery } from "react-query";
+import postFn from "../libs/axios/postFn";
+import { Sale } from "../types";
+import getFn from "../libs/axios/getFn";
+import {
+  DEFAULT_OPTIONS,
+  getTheme,
+} from "@table-library/react-table-library/material-ui";
+import { useTheme } from "@table-library/react-table-library/theme";
+import {
+  Body,
+  Cell,
+  Data,
+  Header,
+  HeaderCell,
+  HeaderRow,
+  Row,
+  Table,
+} from "@table-library/react-table-library";
 
 interface OwnProps {}
 
@@ -21,11 +47,19 @@ const SalesPage: FunctionComponent<Props> = (props) => {
   } = useForm<CreateSaleDto>();
 
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
-    "Form"
+    "Table"
   );
 
+  const addSaleMutation = useMutation({
+    mutationFn: (data: CreateSaleDto) => postFn("/sales", data),
+    onSuccess: () => {},
+    onError: (err) => {
+      throw err;
+    },
+  });
+
   const onSubmit: SubmitHandler<CreateSaleDto> = (data) => {
-    console.log(data);
+    addSaleMutation.mutate(data);
   };
 
   const WelcomeTypography = (
@@ -37,24 +71,100 @@ const SalesPage: FunctionComponent<Props> = (props) => {
         </Typography>
       </RowBox>
       <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
-        {selectedSection === "Form" && (
-          <Typography variant={"h6"} fontWeight={"bold"}>
-            {" "}
-            Create a new sale record{" "}
-          </Typography>
-        )}
+        <Typography variant={"h6"} fontWeight={"bold"}>
+          {" "}
+          {selectedSection === "Form" && "Create a new sale record"}
+          {selectedSection === "Table" && "View all sale records"}
+        </Typography>
       </RowBox>
     </>
   );
   const sectionSwitcher = (
     <RowBox sx={{ width: "100%", justifyContent: "flex-end", px: "10%" }}>
       {selectedSection === "Form" && (
-        <Button sx={{ borderRadius: "3rem" }} variant={"outlined"}>
+        <Button
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Table");
+          }}
+        >
           {" "}
           View Sales{" "}
         </Button>
       )}
+      {selectedSection === "Table" && (
+        <Button
+          startIcon={<AddRoundedIcon />}
+          sx={{ borderRadius: "3rem" }}
+          variant={"outlined"}
+          onClick={() => {
+            setSelectedSection("Form");
+          }}
+        >
+          {" "}
+          Add Sale{" "}
+        </Button>
+      )}
     </RowBox>
+  );
+
+  const [sales, setSales] = useState<Sale[]>();
+
+  const salesQuery = useQuery({
+    queryKey: " Data",
+    queryFn: () => getFn("/sales"),
+    onSuccess: (data: Sale[]) => {
+      console.log(data);
+      setSales(data);
+    },
+  });
+
+  const materialTheme = getTheme(DEFAULT_OPTIONS);
+  const THEME = useTheme(materialTheme);
+  const tableData: Data = { nodes: sales ?? [{ id: "dffe" }] };
+
+  const SaleTable = (
+    <Table data={tableData} theme={THEME}>
+      {(tableList) => (
+        <>
+          <Header>
+            <HeaderRow>
+              <HeaderCell> Product Name </HeaderCell>
+              <HeaderCell> QTY </HeaderCell>
+              <HeaderCell> Sale Date </HeaderCell>
+              <HeaderCell> Selling Price </HeaderCell>
+              <HeaderCell> Quantity</HeaderCell>
+            </HeaderRow>
+          </Header>
+          <Body>
+            {salesQuery.isLoading ? (
+              <RowBox sx={{ width: "100%" }}>
+                {" "}
+                <CircularProgress />{" "}
+              </RowBox>
+            ) : null}
+            {salesQuery.isError ? (
+              <Typography variant={"h6"} color={"error"}>
+                {" "}
+                Could not load data
+              </Typography>
+            ) : null}
+            {salesQuery.isSuccess
+              ? tableList.map((item) => (
+                  <Row key={item._id} item={item}>
+                    <Cell> {item.productName} </Cell>
+                    <Cell> {item.quantity} </Cell>
+                    <Cell> {item.saleDate} </Cell>
+                    <Cell> {item.sellingPrice} </Cell>
+                    <Cell> {item.quantity} </Cell>
+                  </Row>
+                ))
+              : null}
+          </Body>
+        </>
+      )}
+    </Table>
   );
 
   const PostForm = (
@@ -64,7 +174,7 @@ const SalesPage: FunctionComponent<Props> = (props) => {
           <Grid item md={6}>
             <Typography variant={"h6"} fontWeight={"bold"}>
               {" "}
-              Product Name
+              Sale Name
             </Typography>
             <TextField
               placeholder={"Enter product name"}
@@ -94,7 +204,7 @@ const SalesPage: FunctionComponent<Props> = (props) => {
           <Grid item md={6}>
             <Typography variant={"h6"} fontWeight={"bold"}>
               {" "}
-              Product Buying Price
+              Delivery Method
             </Typography>
             <TextField
               placeholder={"Enter delivery method"}
@@ -137,7 +247,13 @@ const SalesPage: FunctionComponent<Props> = (props) => {
     <ColumnBox sx={{ width: "100%", height: "100%", p: "5%" }}>
       {WelcomeTypography}
       {sectionSwitcher}
-      {PostForm}
+      {selectedSection === "Table" && (
+        <Paper elevation={4} sx={{ borderRadius: "1em" }}>
+          {" "}
+          {SaleTable}{" "}
+        </Paper>
+      )}
+      {selectedSection === "Form" && PostForm}
     </ColumnBox>
   );
 };
