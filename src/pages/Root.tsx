@@ -13,17 +13,17 @@ import {
 interface OwnProps {}
 
 type Props = OwnProps;
-
+export const destinations = [
+  { label: "Dashboard", route: "/admin/dashboard" },
+  { label: "Products", route: "/admin/products" },
+  { label: "Sales", route: "/admin/sales" },
+  { label: "Deliveries", route: "/admin/deliveries" },
+  { label: "Customers", route: "/admin/customers" },
+];
 const Root: FunctionComponent<Props> = (props) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const destinations = [
-    { label: "Dashboard", route: "/admin/dashboard" },
-    { label: "Products", route: "/admin/products" },
-    { label: "Sales", route: "/admin/sales" },
-    { label: "Deliveries", route: "/admin/deliveries" },
-    { label: "Customers", route: "/admin/customers" },
-  ];
+
   const DeskDrawer = (
     <Drawer
       variant={"permanent"}
@@ -63,9 +63,14 @@ const Root: FunctionComponent<Props> = (props) => {
   );
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", width: "100%", height: "100%" }}>
       {DeskDrawer}
-      <Outlet />
+      <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ width: "100%", height: "100%" }}>
+          {" "}
+          <Outlet />{" "}
+        </Box>
+      </Box>
     </Box>
   );
 };
