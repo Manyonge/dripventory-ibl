@@ -1,5 +1,10 @@
 import React, { FunctionComponent, useState } from "react";
-import { ColumnBox, ErrorTypography, RowBox } from "../components";
+import {
+  ColumnBox,
+  DeleteButton,
+  ErrorTypography,
+  RowBox,
+} from "../components";
 import {
   Button,
   CircularProgress,
@@ -117,7 +122,6 @@ const SalesPage: FunctionComponent<Props> = (props) => {
     queryKey: " Data",
     queryFn: () => getFn("/sales"),
     onSuccess: (data: Sale[]) => {
-      console.log(data);
       setSales(data);
     },
   });
@@ -137,6 +141,7 @@ const SalesPage: FunctionComponent<Props> = (props) => {
               <HeaderCell> Sale Date </HeaderCell>
               <HeaderCell> Selling Price </HeaderCell>
               <HeaderCell> Quantity</HeaderCell>
+              <HeaderCell> Delete </HeaderCell>
             </HeaderRow>
           </Header>
           <Body>
@@ -160,6 +165,10 @@ const SalesPage: FunctionComponent<Props> = (props) => {
                     <Cell> {item.saleDate} </Cell>
                     <Cell> {item.sellingPrice} </Cell>
                     <Cell> {item.quantity} </Cell>
+                    <Cell>
+                      {" "}
+                      <DeleteButton _id={item._id} url={"/sales"} />{" "}
+                    </Cell>
                   </Row>
                 ))
               : null}

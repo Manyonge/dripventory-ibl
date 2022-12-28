@@ -1,5 +1,10 @@
 import React, { FunctionComponent, useState } from "react";
-import { ColumnBox, ErrorTypography, RowBox } from "../components";
+import {
+  ColumnBox,
+  DeleteButton,
+  ErrorTypography,
+  RowBox,
+} from "../components";
 import {
   Button,
   CircularProgress,
@@ -50,7 +55,9 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
 
   const addCustomerMutation = useMutation({
     mutationFn: (data: CreateCustomerDto) => postFn("/customers", data),
-    onSuccess: () => {setSelectedSection('Table')},
+    onSuccess: () => {
+      setSelectedSection("Table");
+    },
     onError: (err) => {
       throw err;
     },
@@ -109,7 +116,6 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
     queryKey: " Data",
     queryFn: () => getFn("/customers"),
     onSuccess: (data: Customer[]) => {
-      console.log(data);
       setCustomers(data);
     },
   });
@@ -135,6 +141,7 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
                 <HeaderRow>
                   <HeaderCell> Customer Name </HeaderCell>
                   <HeaderCell> Contact </HeaderCell>
+                  <HeaderCell> Delete </HeaderCell>
                 </HeaderRow>
               </Header>
               <Body>
@@ -142,6 +149,10 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
                   <Row key={item._id} item={item}>
                     <Cell> {item.name} </Cell>
                     <Cell> {item.contact} </Cell>
+                    <Cell>
+                      {" "}
+                      <DeleteButton _id={item._id} url={"/customers"} />{" "}
+                    </Cell>
                   </Row>
                 ))}
               </Body>

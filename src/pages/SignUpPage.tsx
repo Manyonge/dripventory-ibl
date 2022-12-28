@@ -33,7 +33,6 @@ const SignUpPage: FunctionComponent<Props> = (props) => {
   });
 
   const onSubmit: SubmitHandler<CreateUserDto> = (data) => {
-    console.log(data);
     addUserMutation.mutate(data);
   };
   return (

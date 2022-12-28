@@ -34,7 +34,6 @@ const LoginPage: FunctionComponent<Props> = (props) => {
   });
 
   const onSubmit: SubmitHandler<AuthenticateUserDto> = (data) => {
-    console.log(data);
     verifyUserMutation.mutate(data);
   };
   return (
