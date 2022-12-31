@@ -9,24 +9,29 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import { useAppContext } from "../context/AppContext";
 
 interface OwnProps {}
 
 type Props = OwnProps;
 export const destinations = [
-  { label: "Dashboard", route: "/admin/dashboard" },
-  { label: "Products", route: "/admin/products" },
-  { label: "Sales", route: "/admin/sales" },
-  { label: "Deliveries", route: "/admin/deliveries" },
-  { label: "Customers", route: "/admin/customers" },
+  { label: "Products", route: "/admin/products", selectedIndex: "products" },
+  { label: "Sales", route: "/admin/sales", selectedIndex: "sales" },
+  {
+    label: "Deliveries",
+    route: "/admin/deliveries",
+    selectedIndex: "deliveries",
+  },
+  { label: "Customers", route: "/admin/customers", selectedIndex: "customers" },
 ];
 const Root: FunctionComponent<Props> = (props) => {
   const navigate = useNavigate();
+  const { selectedIndex } = useAppContext();
   const theme = useTheme();
   useEffect(() => {
     const loginStatus = sessionStorage.getItem("loginStatus");
     if (loginStatus !== "true") {
-      navigate("/login");
+      navigate("/");
     }
   }, []);
   const DeskDrawer = (
@@ -54,8 +59,18 @@ const Root: FunctionComponent<Props> = (props) => {
           Dripventory
         </Typography>{" "}
       </Toolbar>
+      <MenuItem
+        selected={selectedIndex === "dashboard"}
+        onClick={() => {
+          navigate("/admin/dashboard");
+        }}
+      >
+        {" "}
+        Dashboard
+      </MenuItem>
       {destinations.map((destination) => (
         <MenuItem
+          selected={selectedIndex === destination.selectedIndex}
           key={destination.label}
           onClick={() => {
             navigate(destination.route);

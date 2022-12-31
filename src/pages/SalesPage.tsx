@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import {
   ColumnBox,
   DeleteButton,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import postFn from "../libs/axios/postFn";
 import { Sale } from "../types";
 import getFn from "../libs/axios/getFn";
@@ -34,6 +34,7 @@ import {
   Row,
   Table,
 } from "@table-library/react-table-library";
+import { useAppContext } from "../context/AppContext";
 
 interface OwnProps {}
 
@@ -50,15 +51,23 @@ const SalesPage: FunctionComponent<Props> = (props) => {
     formState: { errors },
     handleSubmit,
   } = useForm<CreateSaleDto>();
+  const { setSelectedIndex, setSnackbarOpen, setSnackBarMessage } =
+    useAppContext();
+  useEffect(() => {
+    setSelectedIndex!("sales");
+  }, []);
 
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
     "Table"
   );
-
+  const queryClient = useQueryClient();
   const addSaleMutation = useMutation({
     mutationFn: (data: CreateSaleDto) => postFn("/sales", data),
     onSuccess: () => {
+      queryClient.invalidateQueries("sales");
       setSelectedSection("Table");
+      setSnackbarOpen!(true);
+      setSnackBarMessage!("Sale added successfully");
     },
     onError: (err) => {
       throw err;
@@ -66,12 +75,19 @@ const SalesPage: FunctionComponent<Props> = (props) => {
   });
 
   const onSubmit: SubmitHandler<CreateSaleDto> = (data) => {
-    addSaleMutation.mutate(data);
+    const newSale: CreateSaleDto = {
+      customerContact: data.customerContact,
+      productName: data.productName,
+      status: data.status,
+      deliveryMethod: data.deliveryMethod,
+    };
+    console.log(newSale);
+    addSaleMutation.mutate(newSale);
   };
 
   const WelcomeTypography = (
     <>
-      <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
+      <RowBox sx={{ justifyContent: "flex-start", width: "100%", my: "1%" }}>
         <Typography variant={"h5"} fontWeight={"bold"}>
           {" "}
           Sales
@@ -119,9 +135,10 @@ const SalesPage: FunctionComponent<Props> = (props) => {
   const [sales, setSales] = useState<Sale[]>();
 
   const salesQuery = useQuery({
-    queryKey: " Data",
+    queryKey: "sales",
     queryFn: () => getFn("/sales"),
     onSuccess: (data: Sale[]) => {
+      console.log(data);
       setSales(data);
     },
   });
@@ -137,37 +154,25 @@ const SalesPage: FunctionComponent<Props> = (props) => {
           <Header>
             <HeaderRow>
               <HeaderCell> Product Name </HeaderCell>
-              <HeaderCell> QTY </HeaderCell>
-              <HeaderCell> Sale Date </HeaderCell>
-              <HeaderCell> Selling Price </HeaderCell>
-              <HeaderCell> Quantity</HeaderCell>
-              <HeaderCell> Delete </HeaderCell>
+              <HeaderCell> Customer Contact </HeaderCell>
+
+              <HeaderCell> </HeaderCell>
             </HeaderRow>
           </Header>
           <Body>
-            {salesQuery.isLoading ? (
-              <RowBox sx={{ width: "100%" }}>
-                {" "}
-                <CircularProgress />{" "}
-              </RowBox>
-            ) : null}
-            {salesQuery.isError ? (
-              <Typography variant={"h6"} color={"error"}>
-                {" "}
-                Could not load data
-              </Typography>
-            ) : null}
             {salesQuery.isSuccess
               ? tableList.map((item) => (
                   <Row key={item._id} item={item}>
                     <Cell> {item.productName} </Cell>
-                    <Cell> {item.quantity} </Cell>
-                    <Cell> {item.saleDate} </Cell>
-                    <Cell> {item.sellingPrice} </Cell>
-                    <Cell> {item.quantity} </Cell>
+                    <Cell> {item.customerContact} </Cell>
+
                     <Cell>
                       {" "}
-                      <DeleteButton _id={item._id} url={"/sales"} />{" "}
+                      <DeleteButton
+                        _id={item._id}
+                        url={"/sales"}
+                        queryKey={"sales"}
+                      />{" "}
                     </Cell>
                   </Row>
                 ))

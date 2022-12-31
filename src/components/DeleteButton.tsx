@@ -7,17 +7,18 @@ import deleteFn from "../libs/axios/deleteFn";
 interface OwnProps {
   _id: string;
   url: string;
+  queryKey: string;
 }
 
 type Props = OwnProps;
 
 export const DeleteButton: FunctionComponent<Props> = (props) => {
-  const { _id, url } = props;
+  const { _id, url, queryKey } = props;
   const queryClient = useQueryClient();
   const deleteMutation = useMutation({
     mutationFn: () => deleteFn(`${url}/${_id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(" Data");
+      queryClient.invalidateQueries(queryKey);
     },
   });
   return (

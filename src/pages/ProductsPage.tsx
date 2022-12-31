@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import {
   ColumnBox,
   DeleteButton,
@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import postFn from "../libs/axios/postFn";
 import getFn from "../libs/axios/getFn";
 import { Product } from "../types";
@@ -35,6 +35,7 @@ import {
   Row,
   Table,
 } from "@table-library/react-table-library";
+import { useAppContext } from "../context/AppContext";
 
 interface OwnProps {}
 
@@ -52,14 +53,30 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
     formState: { errors },
     handleSubmit,
   } = useForm<CreateProductDto>();
-
+  const { setSelectedIndex, setSnackBarMessage, setSnackbarOpen } =
+    useAppContext();
+  useEffect(() => {
+    setSelectedIndex!("products");
+  }, []);
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
     "Table"
   );
+  const queryClient = useQueryClient();
+
+  const productsQuery = useQuery({
+    queryKey: "products",
+    queryFn: () => getFn("/products"),
+    onSuccess: (data: Product[]) => {
+      setProducts(data);
+    },
+  });
 
   const addProductMutation = useMutation({
     mutationFn: (data: CreateProductDto) => postFn("/products", data),
     onSuccess: () => {
+      queryClient.invalidateQueries("products");
+      setSnackbarOpen!(true);
+      setSnackBarMessage!("Product added successfully");
       setSelectedSection("Table");
     },
     onError: (err) => {
@@ -89,7 +106,9 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
     </>
   );
   const sectionSwitcher = (
-    <RowBox sx={{ width: "100%", justifyContent: "flex-end", px: "10%" }}>
+    <RowBox
+      sx={{ width: "100%", justifyContent: "flex-end", px: "10%", my: "1%" }}
+    >
       {selectedSection === "Form" && (
         <Button
           sx={{ borderRadius: "3rem" }}
@@ -119,14 +138,6 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
   );
 
   const [products, setProducts] = useState<Product[]>();
-
-  const productsQuery = useQuery({
-    queryKey: " Data",
-    queryFn: () => getFn("/products"),
-    onSuccess: (data: Product[]) => {
-      setProducts(data);
-    },
-  });
 
   const materialTheme = getTheme(DEFAULT_OPTIONS);
   const THEME = useTheme(materialTheme);
@@ -165,7 +176,11 @@ const ProductsPage: FunctionComponent<Props> = (props) => {
                     <Cell> {item.restockDate} </Cell>
                     <Cell>
                       {" "}
-                      <DeleteButton _id={item._id} url={"/products"} />{" "}
+                      <DeleteButton
+                        _id={item._id}
+                        url={"/products"}
+                        queryKey={"products"}
+                      />{" "}
                     </Cell>
                   </Row>
                 ))}

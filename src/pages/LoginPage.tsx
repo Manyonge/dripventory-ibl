@@ -45,29 +45,52 @@ const LoginPage: FunctionComponent<Props> = (props) => {
       }}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Paper elevation={4} sx={{ minWidth: "50vw", p: "3rem" }}>
-          <ColumnBox>
+        <Paper
+          elevation={4}
+          sx={{
+            width: "30vw",
+            height: "50vh",
+            p: "3rem",
+            borderRadius: "1rem",
+          }}
+        >
+          <ColumnBox sx={{ height: "100%", width: "100%" }}>
             {" "}
-            <Typography variant={"h6"} fontWeight={"bold"}>
-              Username
-            </Typography>
-            <TextField
-              placeholder={"Enter username"}
-              {...register("username", { required: "This field is required" })}
-            />
-            {errors.username && (
-              <ErrorTypography msg={errors.username.message} />
-            )}{" "}
-            <Typography variant={"h6"} fontWeight={"bold"}>
-              Password
-            </Typography>
-            <TextField
-              placeholder={"Enter password"}
-              {...register("password", { required: "This field is required" })}
-            />
-            {errors.password && (
-              <ErrorTypography msg={errors.password.message} />
-            )}
+            <ColumnBox
+              sx={{ alignItems: "flex-start", width: "50%", mb: "auto" }}
+            >
+              <Typography fontWeight={"bold"} variant={"body1"}>
+                Nice to see you again
+              </Typography>
+            </ColumnBox>
+            <ColumnBox sx={{ alignItems: "flex-start", width: "50%" }}>
+              <Typography variant={"h6"} fontWeight={"bold"}>
+                Username
+              </Typography>
+              <TextField
+                placeholder={"Enter username"}
+                {...register("username", {
+                  required: "This field is required",
+                })}
+              />
+              {errors.username && (
+                <ErrorTypography msg={errors.username.message} />
+              )}{" "}
+            </ColumnBox>
+            <ColumnBox sx={{ alignItems: "flex-start", width: "50%" }}>
+              <Typography variant={"h6"} fontWeight={"bold"}>
+                Password
+              </Typography>
+              <TextField
+                placeholder={"Enter password"}
+                {...register("password", {
+                  required: "This field is required",
+                })}
+              />
+              {errors.password && (
+                <ErrorTypography msg={errors.password.message} />
+              )}
+            </ColumnBox>
             <RowBox sx={{ pt: "3%", width: "30%" }}>
               <Button
                 type={"submit"}

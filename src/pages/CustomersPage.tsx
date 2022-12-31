@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import {
   ColumnBox,
   DeleteButton,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import postFn from "../libs/axios/postFn";
 import { Customer } from "../types";
 import getFn from "../libs/axios/getFn";
@@ -34,6 +34,7 @@ import {
   Row,
   Table,
 } from "@table-library/react-table-library";
+import { useAppContext } from "../context/AppContext";
 
 interface OwnProps {}
 
@@ -49,13 +50,22 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
     handleSubmit,
   } = useForm<CreateCustomerDto>();
 
+  const { setSelectedIndex, setSnackbarOpen, setSnackBarMessage } =
+    useAppContext();
+  useEffect(() => {
+    setSelectedIndex!("customers");
+  }, []);
+
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
     "Table"
   );
-
+  const queryClient = useQueryClient();
   const addCustomerMutation = useMutation({
     mutationFn: (data: CreateCustomerDto) => postFn("/customers", data),
     onSuccess: () => {
+      queryClient.refetchQueries("customers");
+      setSnackbarOpen!(true);
+      setSnackBarMessage!("Customer added successfully");
       setSelectedSection("Table");
     },
     onError: (err) => {
@@ -68,7 +78,7 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
 
   const WelcomeTypography = (
     <>
-      <RowBox sx={{ justifyContent: "flex-start", width: "100%" }}>
+      <RowBox sx={{ justifyContent: "flex-start", width: "100%", my: "1%" }}>
         <Typography variant={"h5"} fontWeight={"bold"}>
           {" "}
           Customers
@@ -113,7 +123,7 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
   const [customers, setCustomers] = useState<Customer[]>();
 
   const customersQuery = useQuery({
-    queryKey: " Data",
+    queryKey: "Data",
     queryFn: () => getFn("/customers"),
     onSuccess: (data: Customer[]) => {
       setCustomers(data);
@@ -151,7 +161,11 @@ const CustomersPage: FunctionComponent<Props> = (props) => {
                     <Cell> {item.contact} </Cell>
                     <Cell>
                       {" "}
-                      <DeleteButton _id={item._id} url={"/customers"} />{" "}
+                      <DeleteButton
+                        _id={item._id}
+                        url={"/customers"}
+                        queryKey={"customers"}
+                      />{" "}
                     </Cell>
                   </Row>
                 ))}

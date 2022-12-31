@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import {
   ColumnBox,
   DeleteButton,
@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import postFn from "../libs/axios/postFn";
 import { Delivery, Product } from "../types";
 import getFn from "../libs/axios/getFn";
@@ -34,6 +34,7 @@ import {
   Row,
   Table,
 } from "@table-library/react-table-library";
+import { useAppContext } from "../context/AppContext";
 
 interface OwnProps {}
 
@@ -51,15 +52,19 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
     formState: { errors },
     handleSubmit,
   } = useForm<CreateDeliveryDto>();
-
+  const { setSelectedIndex } = useAppContext();
+  useEffect(() => {
+    setSelectedIndex!("deliveries");
+  }, []);
   const [selectedSection, setSelectedSection] = useState<"Table" | "Form">(
     "Table"
   );
-
+  const queryClient = useQueryClient();
   const addDeliveryMutation = useMutation({
     mutationFn: (data: CreateDeliveryDto) => postFn("/deliveries", data),
     onSuccess: () => {
       setSelectedSection("Table");
+      queryClient.refetchQueries("Data");
     },
     onError: (err) => {
       throw err;
@@ -116,7 +121,7 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
   const [deliveries, setDeliveries] = useState<Delivery[]>();
 
   const deliveriesQuery = useQuery({
-    queryKey: " Data",
+    queryKey: "deliveries",
     queryFn: () => getFn("/deliveries"),
     onSuccess: (data: Delivery[]) => {
       setDeliveries(data);
@@ -143,10 +148,7 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
               <Header>
                 <HeaderRow>
                   <HeaderCell> Product Name </HeaderCell>
-                  <HeaderCell> Quantity </HeaderCell>
-                  <HeaderCell> Date of Sale </HeaderCell>
-                  <HeaderCell> Selling Price </HeaderCell>
-                  <HeaderCell> Customer Contact </HeaderCell>
+
                   <HeaderCell> Delete </HeaderCell>
                 </HeaderRow>
               </Header>
@@ -154,13 +156,14 @@ const DeliveriesPage: FunctionComponent<Props> = (props) => {
                 {tableList.map((item) => (
                   <Row key={item._id} item={item}>
                     <Cell> {item.productName} </Cell>
-                    <Cell> {item.quantity} </Cell>
-                    <Cell> {item.saleDate} </Cell>
-                    <Cell> {item.sellingPrice} </Cell>
-                    <Cell> {item.customerContact} </Cell>
+
                     <Cell>
                       {" "}
-                      <DeleteButton _id={item._id} url={"/deliveries"} />{" "}
+                      <DeleteButton
+                        _id={item._id}
+                        url={"/deliveries"}
+                        queryKey={"deliveries"}
+                      />{" "}
                     </Cell>
                   </Row>
                 ))}
