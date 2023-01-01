@@ -19,7 +19,7 @@ const DashboardPage: FunctionComponent<Props> = (props) => {
   return (
     <Grid container sx={{ width: "100%", p: "2%" }} spacing={3}>
       {destinations.map((destination) => (
-        <Grid item md={6}>
+        <Grid item md={6} key={destination.route}>
           {" "}
           <Paper
             elevation={4}

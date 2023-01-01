@@ -1,6 +1,13 @@
 import React, { FunctionComponent } from "react";
 import { ColumnBox, ErrorTypography, RowBox } from "../components";
-import { Button, Paper, TextField, Typography, useTheme } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  Paper,
+  TextField,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useMutation } from "react-query";
@@ -48,54 +55,68 @@ const LoginPage: FunctionComponent<Props> = (props) => {
         <Paper
           elevation={4}
           sx={{
-            width: "30vw",
-            height: "50vh",
+            width: "28vw",
+            height: "55vh",
             p: "3rem",
-            borderRadius: "1rem",
+            borderRadius: "20px",
           }}
         >
           <ColumnBox sx={{ height: "100%", width: "100%" }}>
             {" "}
-            <ColumnBox
-              sx={{ alignItems: "flex-start", width: "50%", mb: "auto" }}
-            >
-              <Typography fontWeight={"bold"} variant={"body1"}>
+            <ColumnBox sx={{ width: "100%", mb: "auto" }}>
+              <Typography
+                fontWeight={"bold"}
+                variant={"body1"}
+                sx={{ fontSize: "1.5rem" }}
+              >
                 Nice to see you again
               </Typography>
             </ColumnBox>
-            <ColumnBox sx={{ alignItems: "flex-start", width: "50%" }}>
-              <Typography variant={"h6"} fontWeight={"bold"}>
-                Username
-              </Typography>
-              <TextField
-                placeholder={"Enter username"}
-                {...register("username", {
-                  required: "This field is required",
-                })}
-              />
-              {errors.username && (
-                <ErrorTypography msg={errors.username.message} />
-              )}{" "}
+            <ColumnBox
+              sx={{ alignItems: "flex-start", width: "100%", my: "auto" }}
+            >
+              <FormControl fullWidth>
+                <Typography variant={"h6"}>Username</Typography>
+                <TextField
+                  size={"small"}
+                  variant={"filled"}
+                  placeholder={"Enter username"}
+                  {...register("username", {
+                    required: "This field is required",
+                  })}
+                />
+                {errors.username && (
+                  <ErrorTypography msg={errors.username.message} />
+                )}{" "}
+              </FormControl>
             </ColumnBox>
-            <ColumnBox sx={{ alignItems: "flex-start", width: "50%" }}>
-              <Typography variant={"h6"} fontWeight={"bold"}>
-                Password
-              </Typography>
-              <TextField
-                placeholder={"Enter password"}
-                {...register("password", {
-                  required: "This field is required",
-                })}
-              />
-              {errors.password && (
-                <ErrorTypography msg={errors.password.message} />
-              )}
+            <ColumnBox
+              sx={{ alignItems: "flex-start", width: "100%", my: "auto" }}
+            >
+              <Typography variant={"h6"}>Password</Typography>
+              <FormControl fullWidth>
+                <TextField
+                  variant={"filled"}
+                  size={"small"}
+                  placeholder={"Enter password"}
+                  {...register("password", {
+                    required: "This field is required",
+                  })}
+                />
+                {errors.password && (
+                  <ErrorTypography msg={errors.password.message} />
+                )}
+              </FormControl>
             </ColumnBox>
-            <RowBox sx={{ pt: "3%", width: "30%" }}>
+            <RowBox sx={{ pt: "3%", width: "100%" }}>
               <Button
                 type={"submit"}
                 variant={"contained"}
-                sx={{ borderRadius: "3rem", width: "100%" }}
+                sx={{
+                  width: "100%",
+                  borderRadius: "0.5rem",
+                  fontSize: "1.1rem",
+                }}
               >
                 {"Login"}
               </Button>

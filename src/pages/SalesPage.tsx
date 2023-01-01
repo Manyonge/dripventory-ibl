@@ -61,6 +61,15 @@ const SalesPage: FunctionComponent<Props> = (props) => {
     "Table"
   );
   const queryClient = useQueryClient();
+
+  const salesQuery = useQuery({
+    queryKey: "sales",
+    queryFn: () => getFn("/sales"),
+    onSuccess: (data: Sale[]) => {
+      setSales(data);
+    },
+  });
+
   const addSaleMutation = useMutation({
     mutationFn: (data: CreateSaleDto) => postFn("/sales", data),
     onSuccess: () => {
@@ -81,7 +90,6 @@ const SalesPage: FunctionComponent<Props> = (props) => {
       status: data.status,
       deliveryMethod: data.deliveryMethod,
     };
-    console.log(newSale);
     addSaleMutation.mutate(newSale);
   };
 
@@ -133,15 +141,6 @@ const SalesPage: FunctionComponent<Props> = (props) => {
   );
 
   const [sales, setSales] = useState<Sale[]>();
-
-  const salesQuery = useQuery({
-    queryKey: "sales",
-    queryFn: () => getFn("/sales"),
-    onSuccess: (data: Sale[]) => {
-      console.log(data);
-      setSales(data);
-    },
-  });
 
   const materialTheme = getTheme(DEFAULT_OPTIONS);
   const THEME = useTheme(materialTheme);
