@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Box,
+  Button,
   Drawer,
   MenuItem,
   Toolbar,
@@ -10,6 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useAppContext } from "../context/AppContext";
+import { RowBox } from "../components";
 
 interface OwnProps {}
 
@@ -80,6 +82,24 @@ const Root: FunctionComponent<Props> = (props) => {
           {destination.label}{" "}
         </MenuItem>
       ))}
+      <RowBox sx={{ width: "100%", mt: "auto", mb: "5%" }}>
+        <Button
+          sx={{
+            width: "80%",
+            borderRadius: "10px",
+            backgroundColor: "white",
+            color: "black",
+            border: "4px solid black",
+          }}
+          variant={"text"}
+          onClick={() => {
+            sessionStorage.setItem("loginStatus", "false");
+            navigate("/");
+          }}
+        >
+          Log out
+        </Button>
+      </RowBox>
     </Drawer>
   );
 
